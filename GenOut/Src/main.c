@@ -1,3 +1,4 @@
+
 /**
   ******************************************************************************
   * File Name          : main.c
@@ -41,7 +42,8 @@
 	//      By shorting PA9 and PA0, whenever PA9 transitions from low to high
 	//      there should be an interrupt and thus the green LED should be turned on.
 	//      Thus the green light should turn on for 2 seconds and then be off for 2 seconds.
-	//           
+	//      Since the Blue pushbutton is tied to PA0, pressing the blue button will toggle the
+	//      green light if PA0 and PA9 are not connected.
 	// ---------------------------------------------------------------------------
 	
 /* Includes ------------------------------------------------------------------*/
