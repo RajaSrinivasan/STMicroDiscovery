@@ -31,6 +31,9 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
+//#include <stdint.h>
+
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "usart.h"
@@ -44,6 +47,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+char helloMessage[] = "Hello" ;
 
 /* USER CODE END PV */
 
@@ -88,7 +92,10 @@ int main(void)
   while (1)
   {
   /* USER CODE END WHILE */
-
+      HAL_UART_Transmit(&huart1,(uint8_t *)helloMessage,strlen(helloMessage),5) ;
+		  HAL_GPIO_TogglePin(GPIOC,LD4_Pin) ;			   // Toggle the LED state	
+		
+		  HAL_Delay(1000) ;	
   /* USER CODE BEGIN 3 */
 
   }
@@ -152,7 +159,34 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void MX_GPIO_Init(void)
+{
 
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+	
+  /*Configure GPIO pins : LD4_Pin LD3_Pin */
+  GPIO_InitStruct.Pin = LD4_Pin|LD3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, LD4_Pin|LD3_Pin, GPIO_PIN_RESET);
+
+}
 /* USER CODE END 4 */
 
 /**
