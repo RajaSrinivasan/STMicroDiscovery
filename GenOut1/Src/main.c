@@ -88,7 +88,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+			HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_9) ;	   // Toggling this pin should create the interrupt
+      HAL_GPIO_TogglePin(GPIOC,LD4_Pin) ;			   // Toggle the LED state
+	    HAL_Delay(1000) ;	
   }
   /* USER CODE END 3 */
 
