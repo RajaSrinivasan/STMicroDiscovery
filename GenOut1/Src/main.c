@@ -162,10 +162,14 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+	/* Enable and set EXTI line 0 Interrupt to the lowest priority */
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+	
   /*Configure GPIO pins : LD4_Pin LD3_Pin */
   GPIO_InitStruct.Pin = LD4_Pin|LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -237,6 +241,12 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 #endif
 
+void EXTI0_1_IRQHandler(uint16_t GPIO_Pin)
+{
+  /* EXTI line interrupt detected */
+	EXTI->PR |= EXTI_PR_PR0 ;             // Clear the interrupt
+	HAL_GPIO_TogglePin(GPIOC,LD3_Pin) ;		// Toggle the LED
+}
 /**
   * @}
   */ 
