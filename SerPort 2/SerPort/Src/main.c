@@ -39,6 +39,8 @@
 #include "usart.h"
 #include "gpio.h"
 
+#include "comm.h"
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -47,7 +49,12 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-char helloMessage[] = "Hello" ;
+uint8_t mysequenceno = 0 ;
+
+INPUT_MESSAGE_TYPE inp ;
+uint8_t num_chars_received = 0 ;
+
+OUTPUT_MESSAGE_TYPE out ;
 
 /* USER CODE END PV */
 
@@ -68,7 +75,12 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  mysequenceno = 0 ;
+	out.o_myseqno = mysequenceno ;
+	out.o_yourseqno = 0 ;
+	inp.i_myseqno = 0 ;
+	inp.i_yourseqno = 0 ;
+	
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -83,18 +95,24 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
 
+  NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	HAL_UART_Receive_IT(&huart1,(uint8_t *)&inp,1) ;
+	
   while (1)
   {
   /* USER CODE END WHILE */
-      HAL_UART_Transmit(&huart1,(uint8_t *)helloMessage,strlen(helloMessage),5) ;
-		  HAL_GPIO_TogglePin(GPIOC,LD4_Pin) ;			   // Toggle the LED state	
+		  mysequenceno++ ;
+		  out.o_myseqno = mysequenceno ;
+		  out.o_yourseqno = inp.i_yourseqno ;
 		
+      HAL_UART_Transmit(&huart1, (uint8_t *)&out , sizeof(out), 100) ;
+		  HAL_GPIO_TogglePin(GPIOC,LD4_Pin) ;			   // Toggle the LED state	
 		  HAL_Delay(1000) ;	
   /* USER CODE BEGIN 3 */
 
@@ -223,6 +241,21 @@ void assert_failed(uint8_t* file, uint32_t line)
 }
 
 #endif
+
+void USART1_IRQHander()
+{
+	HAL_UART_IRQHandler(&huart1) ;
+	if (num_chars_received == 0)
+	{
+		num_chars_received++ ;
+		HAL_UART_Receive_IT( &huart1 , &inp.i_yourseqno , 1 ) ;
+	}
+	else
+	{
+		num_chars_received = 0 ;
+		HAL_UART_Receive_IT( &huart1 , &inp.i_myseqno , 1 ) ;
+	}
+}
 
 /**
   * @}
