@@ -31,11 +31,12 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
-#include <string.h>
 #include "main.h"
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include "comm.h"
 
 /* USER CODE END Includes */
 
@@ -44,7 +45,10 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+OUTPUT_MESSAGE_TYPE outmsg;
 
+INPUT_MESSAGE_TYPE  inmsg ;
+int inmsgptr=0 ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,12 +63,38 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-  char beaconMessage[] = "Hello" ;
+uint8_t cycles=0xff ;
+int recseqno=0 ;
+uint8_t sequenceno = 22 ;
+
+uint8_t receivedchar = 0 ;
+
+uint8_t receivebuffer[128] ;
+uint8_t receivebufptr = 0 ;
+
+void IndicateCycleNo(void)
+{
+   //HAL_GPIO_WritePin(LD4_Pin|LD3_Pin|LD5_Pin|LD6_Pin,GPIO_PIN_RESET) ;
+	 switch (cycles % 4)
+	 {
+		 case 0 : HAL_GPIO_TogglePin(LD4_GPIO_Port,LD4_Pin) ;
+			 break;
+		 case 1 : HAL_GPIO_TogglePin(LD5_GPIO_Port,LD5_Pin) ;
+			 break;
+		 case 2 : HAL_GPIO_TogglePin(LD6_GPIO_Port,LD6_Pin) ;
+			 break;
+		 case 3 : HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin) ;
+			 break ;
+		 default:
+		 break ;
+	 }
+	 
+}
 /* USER CODE END 0 */
 
 int main(void)
 {
-  
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -82,18 +112,30 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-
+	__HAL_UART_ENABLE_IT(&huart2 , UART_IT_RXNE);
+	NVIC_EnableIRQ(USART2_IRQn);
+	HAL_UART_Receive_IT(&huart2 , (uint8_t *)&receivedchar , sizeof(receivedchar));
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+ 	memset(receivebuffer,0,sizeof(receivebuffer)) ;
+	memset(&inmsg,0,sizeof(inmsg));
   while (1)
   {
   /* USER CODE END WHILE */
 
+
   /* USER CODE BEGIN 3 */
-		 HAL_UART_Transmit(&huart2,(uint8_t *)beaconMessage ,5,100);
-		 HAL_Delay(1000) ;
+				cycles++ ;
+		IndicateCycleNo();
+		sequenceno--;
+		outmsg.o_myseqno = sequenceno ;
+		outmsg.o_yourseqno = receivedchar ;
+		HAL_UART_Transmit(&huart2, (uint8_t *)&outmsg , 1 , 1000);
+		HAL_GPIO_TogglePin(GPIOC,LD4_Pin|LD3_Pin);
+		HAL_UART_Receive_IT(&huart2 , (uint8_t *)&receivedchar , sizeof(receivedchar));
+		HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 
@@ -160,7 +202,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200 ;
+  huart2.Init.BaudRate = BAUD_RATE ;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -368,7 +410,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 }
 
 #endif
-
+void USART2_IRQHandler(void)
+{
+   HAL_UART_IRQHandler(&huart2) ;
+}
 /**
   * @}
   */ 
