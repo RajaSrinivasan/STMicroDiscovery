@@ -11,4 +11,7 @@ TX
     - First byte - increasing sequence number maintained by this micro
     - Second byte - a number received from the partner. Same as what comes in on the RX channel
 
-The partner program (Beacon) just sends out a decreasing number every second.
+The partner program (Beacon) just sends out a decreasing number every second. This is found with the name SerPort in the
+subproject "stm32f4"
+
+ie STMicroDiscovery/stm32f4/SerPort
